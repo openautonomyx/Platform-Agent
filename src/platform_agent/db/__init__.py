@@ -1,5 +1,12 @@
-"""Platform Agent - Database Models."""
+"""Platform Agent - SurrealDB Models."""
 
-from .invitation import InvitationDB, MemberDB, TeamDB
+from surrealdb import AsyncSurreal
+from .models import MemberDB, InvitationDB, TeamDB, KnowledgeDB, ConversationDB, ToolDB, AnalyticsDB
+from .schema import SCHEMA
+from .queries import *
 
-__all__ = ["InvitationDB", "MemberDB", "TeamDB"]
+__all__ = [
+    "AsyncSurreal",
+    "MemberDB", "InvitationDB", "TeamDB", "KnowledgeDB", "ConversationDB", "ToolDB", "AnalyticsDB",
+    "SCHEMA",
+]
