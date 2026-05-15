@@ -58,6 +58,59 @@ const models = {
         <option value="">Select provider first</option>
       </select>
     </section>
+
+    <!-- Tools -->
+    <section class="card mb-6">
+      <h2 class="text-xl font-semibold mb-4">🔧 Tools</h2>
+      <div id="tools-container" class="space-y-2"></div>
+    </section>
+    
+    <!-- Skills -->
+    <section class="card mb-6">
+      <h2 class="text-xl font-semibold mb-4">💡 Skills</h2>
+      <div id="skills-container" class="space-y-2"></div>
+    </section>
+    
+    <!-- Knowledge -->
+    <section class="card mb-6">
+      <h2 class="text-xl font-semibold mb-4">📚 Knowledge Base</h2>
+      <div class="flex gap-2 mb-4">
+        <button onclick="showAddDoc()" class="btn-primary">+ Add Document</button>
+        <button onclick="showAddUrl()" class="px-4 py-2 border rounded-lg">+ Add URL</button>
+      </div>
+      <div id="knowledge-list" class="space-y-2"></div>
+    </section>
+    
+    <!-- Memory -->
+    <section class="card mb-6">
+      <h2 class="text-xl font-semibold mb-4">🧠 Memory</h2>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium mb-1">Context Length</label>
+          <select id="memory-context" class="input">
+            <option value="1">1 message</option>
+            <option value="5" selected>5 messages</option>
+            <option value="10">10 messages</option>
+            <option value="50">50 messages</option>
+            <option value="all">All history</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Summary Mode</label>
+          <select id="memory-summary" class="input">
+            <option value="none">None</option>
+            <option value="auto" selected>Auto summarize</option>
+            <option value="full">Full context</option>
+          </select>
+        </div>
+      </div>
+      <div class="mt-4">
+        <label class="flex items-center gap-2">
+          <input type="checkbox" id="memory-embed" checked />
+          <span>Embed and store memories</span>
+        </label>
+      </div>
+    </section>
     
     <!-- API Key -->
     <section class="card mb-6">
@@ -198,7 +251,140 @@ const models = {
     if (settings.surrealdbDb) document.getElementById('surrealdbDb').value = settings.surrealdbDb;
     if (settings.surrealdbUser) document.getElementById('surrealdbUser').value = settings.surrealdbUser;
   }
+  
+  // === Tools ===
+  const defaultTools = [
+    { id: 'web_search', name: '🌐 Web Search', desc: 'Search the web' },
+    { id: 'calculator', name: '🔢 Calculator', desc: 'Math calculations' },
+    { id: 'code_runner', name: '💻 Run Code', desc: 'Execute code' },
+  ];
+  let tools = [...defaultTools];
+  
+  function renderTools() {
+    const c = document.getElementById('tools-container');
+    if (!c) return;
+    c.innerHTML = tools.map(t => `
+      <div class="tool-item">
+        <div><div class="font-medium">${t.name}</div><div class="text-sm text-gray-500">${t.desc}</div></div>
+        <button class="text-red-500" onclick="removeTool('${t.id}')">🗑️</button>
+      </div>
+    `).join('') + `<div class="add-box" onclick="addTool()">+ Add Tool</div>`;
+  }
+  
+  function addTool() {
+    const name = prompt('Tool name:');
+    if (name) tools.push({ id: name.toLowerCase().replace(/\s+/g, '_'), name, desc: 'Custom' });
+    renderTools();
+  }
+  
+  function removeTool(id) {
+    tools = tools.filter(t => t.id !== id);
+    renderTools();
+  }
+  
+  // === Skills ===
+  const defaultSkills = [
+    { id: 'code_review', name: '🔍 Code Review', desc: 'Review code' },
+    { id: 'debug', name: '🐛 Debug', desc: 'Debug issues' },
+    { id: 'test', name: '🧪 Test', desc: 'Generate tests' },
+  ];
+  let skills = [...defaultSkills];
+  
+  function renderSkills() {
+    const c = document.getElementById('skills-container');
+    if (!c) return;
+    c.innerHTML = skills.map(s => `
+      <div class="tool-item">
+        <div><div class="font-medium">${s.name}</div><div class="text-sm text-gray-500">${s.desc}</div></div>
+        <button class="text-red-500" onclick="removeSkill('${s.id}')">🗑️</button>
+      </div>
+    `).join('') + `<div class="add-box" onclick="addSkill()">+ Add Skill</div>`;
+  }
+  
+  function addSkill() {
+    const name = prompt('Skill name:');
+    if (name) skills.push({ id: name.toLowerCase().replace(/\s+/g, '_'), name, desc: 'Custom' });
+    renderSkills();
+  }
+  
+  function removeSkill(id) {
+    skills = skills.filter(s => s.id !== id);
+    renderSkills();
+  }
+  
+  // === Knowledge ===
+  let knowledge = [];
+  
+  function renderKnowledge() {
+    const c = document.getElementById('knowledge-list');
+    if (!c) return;
+    c.innerHTML = knowledge.map(k => `
+      <div class="tool-item">
+        <div><div class="font-medium">${k.title || k.url}</div><div class="text-sm text-gray-500">${k.type}</div></div>
+        <button class="text-red-500" onclick="removeKnowledge('${k.id}')">🗑️</button>
+      </div>
+    `).join('');
+  }
+  
+  function showAddDoc() {
+    const title = prompt('Document title:');
+    const content = prompt('Content:');
+    if (title && content) {
+      knowledge.push({ id: crypto.randomUUID(), type: 'document', title, content });
+      renderKnowledge();
+    }
+  }
+  
+  function showAddUrl() {
+    const url = prompt('URL:');
+    if (url) {
+      knowledge.push({ id: crypto.randomUUID(), type: 'url', url, title: url });
+      renderKnowledge();
+    }
+  }
+  
+  function removeKnowledge(id) {
+    knowledge = knowledge.filter(k => k.id !== id);
+    renderKnowledge();
+  }
+  
+  // Init tools/skills/knowledge
+  renderTools();
+  renderSkills();
+  renderKnowledge();
 </script>
+
+<style>
+  .card {
+    @apply bg-white rounded-xl p-6 shadow-sm border border-gray-200;
+  }
+  .input {
+    @apply w-full px-4 py-2 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition;
+  }
+  .btn-primary {
+    @apply px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition;
+  }
+  .border-primary {
+    @apply border-blue-500;
+  }
+  .bg-primary {
+    @apply bg-blue-500;
+  }
+  .bg-primary\/10 {
+    @apply bg-blue-500/10;
+  }
+  .ring-primary\/20 {
+    --tw-ring-color: rgb(59 130 246 / 0.2);
+  }
+  
+  /* Tools & Skills */
+  .add-box {
+    @apply border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition;
+  }
+  .tool-item {
+    @apply flex items-center justify-between p-3 bg-gray-50 rounded-lg;
+  }
+</style>
 
 <style>
   .card {
