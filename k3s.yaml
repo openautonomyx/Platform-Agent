@@ -1,4 +1,4 @@
-# Platform Agent - K3s Manifests
+# Platform Agent - K3s (SurrealDB in ConfigMap)
 ---
 apiVersion: v1
 kind: Namespace
@@ -9,144 +9,70 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   namespace: platform-agent
-  name: platform-agent-config
+  name: platform-agent
 data:
-  SURREALDB_URL: "ws://surrealdb:8000/nospace/db"
+  # SurrealDB (external)
+  SURREALDB_URL: "wss://surrealdb.example.com/rpc"
   SURREALDB_USER: "root"
-  SURREALDB_PASS: "root"
+  SURREALDB_PASS: "change-me"
+  SURREALDB_NS: "nospace"
+  SURREALDB_DB: "platform"
+  
+  # LLM
   LLM_PROVIDER: "ollama"
+  LLM_MODEL: "llama3"
+  LLM_BASE_URL: "http://localhost:11434"
 ---
 apiVersion: v1
 kind: Service
 metadata:
   namespace: platform-agent
-  name: surrealdb
-spec:
-  ports:
-    - port: 8000
-  selector:
-    app: surrealdb
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  namespace: platform-agent
-  name: surrealdb
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: surrealdb
-  template:
-    metadata:
-      labels:
-        app: surrealdb
-    spec:
-      containers:
-        - name: surrealdb
-          image: surrealdb/surrealdb:latest
-          args: ["start", "memory", "--user", "root", "--pass", "root"]
-          ports:
-            - containerPort: 8000
-          volumeMounts:
-            - name: data
-              mountPath: /var/lib/surrealdb
-      volumes:
-        - name: data
-          emptyDir: {}
----
-apiVersion: v1
-kind: Service
-metadata:
-  namespace: platform-agent
-  name: api
+  name: platform-agent
 spec:
   ports:
     - port: 8080
       targetPort: 8080
   selector:
-    app: api
+    app: platform-agent
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   namespace: platform-agent
-  name: api
+  name: platform-agent
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: api
+      app: platform-agent
   template:
     metadata:
       labels:
-        app: api
+        app: platform-agent
     spec:
       containers:
-        - name: api
+        - name: platform-agent
           image: ghcr.io/openautonomyx/platform-agent:latest
           envFrom:
             - configMapRef:
-                name: platform-agent-config
+                name: platform-agent
           ports:
             - containerPort: 8080
----
-apiVersion: v1
-kind: Service
-metadata:
-  namespace: platform-agent
-  name: ui
-spec:
-  ports:
-    - port: 80
-      targetPort: 3000
-  selector:
-    app: ui
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  namespace: platform-agent
-  name: ui
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: ui
-  template:
-    metadata:
-      labels:
-        app: ui
-    spec:
-      containers:
-        - name: ui
-          image: ghcr.io/openautonomyx/platform-agent-ui:latest
-          ports:
-            - containerPort: 3000
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   namespace: platform-agent
   name: platform-agent
-  annotations:
-    traefik.ingress.kubernetesify/router.entrypoints: websecure
 spec:
   rules:
-    - host: platform-agent.local
+    - host: platform.local
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: ui
-                port:
-                  number: 80
-          - path: /api
-            pathType: Prefix
-            backend:
-              service:
-                name: api
+                name: platform-agent
                 port:
                   number: 8080
