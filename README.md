@@ -16,6 +16,9 @@ SurrealQL-based autonomous agent.
 | **Vector Search** | ✅ | HNSW, cosine/euclidean/manhattan |
 | **Full-Text** | ✅ | BM25, analyzers |
 | **Hybrid Search** | ✅ | Vector + full-text RRF |
+| **SurrealQL** | ✅ | SELECT, CREATE, UPDATE, RELATE |
+| **Graph** | ✅ | ->traverse, RELATE |
+| **Functions** | ✅ | math, string, array, vector |
 
 ## Install
 
