@@ -10,6 +10,7 @@ import asyncio
 from surrealdb import AsyncSurreal
 
 from .config import AgentConfig
+from .memory import AgentMemory
 from .tools import Tool, FileTool, BashTool, SearchTool
 
 

@@ -4,17 +4,28 @@ __version__ = "0.1.0"
 __author__ = "OpenAutonomyx"
 __description__ = "An autonomous AI agent platform with SurrealDB backend"
 
-from .agent import PlatformAgent
+from .agent import PlatformAgent, SyncPlatformAgent, create_agent
 from .memory import AgentMemory
-from .tools import Tool, FileTool, BashTool, SearchTool
 from .config import AgentConfig
+from .tools import Tool, FileTool, BashTool, SearchTool
+from .skills import Skill, SkillRegistry, get_registry
 
 __all__ = [
+    # Core
     "PlatformAgent",
+    "SyncPlatformAgent", 
+    "create_agent",
+    # Memory
     "AgentMemory",
+    # Config
+    "AgentConfig",
+    # Tools
     "Tool",
-    "FileTool", 
+    "FileTool",
     "BashTool",
     "SearchTool",
-    "AgentConfig",
+    # Skills
+    "Skill",
+    "SkillRegistry",
+    "get_registry",
 ]

@@ -1,14 +1,21 @@
-"""Platform Agent tools."""
+"""Platform Agent Tools - extensibility capabilities."""
 
 import os
 import subprocess
+import json
+import asyncio
+import aiohttp
 from typing import Any, Optional
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 class Tool(ABC):
-    """Base class for agent tools."""
+    """Base class for agent tools.
+    
+    Tools extend the agent's capabilities by providing specific actions.
+    Each tool has a name, description, and async execute method.
+    """
     
     @property
     @abstractmethod
@@ -22,11 +29,23 @@ class Tool(ABC):
         """Tool description."""
         pass
     
+    @property
+    def schema(self) -> dict[str, Any]:
+        """JSON schema for the tool."""
+        return {
+            "name": self.name,
+            "description": self.description,
+        }
+    
     @abstractmethod
     async def execute(self, **kwargs) -> Any:
         """Execute the tool."""
         pass
 
+
+# -----------------------------------------------------------------------------
+# File Tools
+# -----------------------------------------------------------------------------
 
 @dataclass
 class FileTool(Tool):
@@ -63,19 +82,17 @@ class FileTool(Tool):
             return str(os.path.exists(path))
         
         return f"Unknown operation: {operation}"
-    
-    async def read(self, path: str) -> str:
-        """Read a file."""
-        return await self.execute(operation="read", path=path)
-    
-    async def write(self, path: str, content: str) -> str:
-        """Write to a file."""
-        return await self.execute(operation="write", path=path, content=content)
 
+
+# -----------------------------------------------------------------------------
+# Shell Tools
+# -----------------------------------------------------------------------------
 
 @dataclass
 class BashTool(Tool):
     """Tool for running bash commands."""
+    
+    timeout: int = 30
     
     @property
     def name(self) -> str:
@@ -94,7 +111,7 @@ class BashTool(Tool):
                 cwd=cwd,
                 capture_output=True,
                 text=True,
-                timeout=30,
+                timeout=self.timeout,
             )
             output = result.stdout or result.stderr or ""
             if result.returncode != 0:
@@ -104,15 +121,17 @@ class BashTool(Tool):
             return "Command timed out"
         except Exception as e:
             return f"Error: {e}"
-    
-    async def run(self, command: str, cwd: Optional[str] = None) -> str:
-        """Run a command."""
-        return await self.execute(command=command, cwd=cwd)
 
+
+# -----------------------------------------------------------------------------
+# Web Tools
+# -----------------------------------------------------------------------------
 
 @dataclass
 class SearchTool(Tool):
     """Tool for web search."""
+    
+    api_key: Optional[str] = field(default=None)
     
     @property
     def name(self) -> str:
@@ -124,15 +143,13 @@ class SearchTool(Tool):
     
     async def execute(self, query: str = "", limit: int = 5) -> str:
         """Execute web search."""
-        # Placeholder - in production, integrate with search API
-        return f"Search results for '{query}' (placeholder)"
-    
-    async def search(self, query: str, limit: int = 5) -> str:
-        """Search the web."""
-        return await self.execute(query=query, limit=limit)
+        # Use Tavily API if configured
+        if self.api_key:
+            return await self._search_tavily(query, limit)
+        return f"Search results for '{query}' (search API not configured - set TAVILY_API_KEY)"
 
 
-@dataclass
+@dataclass 
 class WebFetchTool(Tool):
     """Tool for fetching web pages."""
     
@@ -146,9 +163,120 @@ class WebFetchTool(Tool):
     
     async def execute(self, url: str = "") -> str:
         """Fetch a URL."""
-        # Placeholder - in production, use requests/aiohttp
-        return f"Fetched {url} (placeholder)"
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url) as response:
+                    return await response.text()
+        except Exception as e:
+            return f"Error fetching {url}: {e}"
+
+
+# -----------------------------------------------------------------------------
+# Utility Tools
+# -----------------------------------------------------------------------------
+
+@dataclass
+class CalculatorTool(Tool):
+    """Tool for calculations."""
     
-    async def fetch(self, url: str) -> str:
-        """Fetch a URL."""
-        return await self.execute(url=url)
+    @property
+    def name(self) -> str:
+        return "calculator"
+    
+    @property
+    def description(self) -> str:
+        return "Perform calculations (basic math)"
+    
+    async def execute(self, expression: str = "") -> str:
+        """Evaluate expression."""
+        try:
+            # Safe eval for basic math
+            allowed = {"__builtins__": {}, "abs": abs, "max": max, "min": min, "round": round}
+            result = eval(expression, allowed)
+            return str(result)
+        except Exception as e:
+            return f"Error: {e}"
+
+
+@dataclass
+class JSONTool(Tool):
+    """Tool for JSON operations."""
+    
+    @property
+    def name(self) -> str:
+        return "json"
+    
+    @property
+    def description(self) -> str:
+        return "Parse and Format JSON"
+    
+    async def execute(self, operation: str = "parse", content: str = "") -> str:
+        """Execute JSON operation."""
+        if operation == "parse":
+            try:
+                return json.dumps(json.loads(content))
+            except Exception as e:
+                return f"Error: {e}"
+        elif operation == "format":
+            try:
+                return json.dumps(json.loads(content), indent=2)
+            except Exception as e:
+                return f"Error: {e}"
+        return f"Unknown operation: {operation}"
+
+
+# -----------------------------------------------------------------------------
+# Tool Registry
+# -----------------------------------------------------------------------------
+
+class ToolRegistry:
+    """Registry for agent tools."""
+    
+    def __init__(self):
+        self._tools: dict[str, Tool] = {}
+        self._register_defaults()
+    
+    def _register_defaults(self):
+        """Register default tools."""
+        defaults = [
+            FileTool(),
+            BashTool(),
+            SearchTool(),
+            WebFetchTool(),
+            CalculatorTool(),
+            JSONTool(),
+        ]
+        for tool in defaults:
+            self.register(tool)
+    
+    def register(self, tool: Tool) -> None:
+        """Register a tool."""
+        self._tools[tool.name] = tool
+    
+    def unregister(self, name: str) -> None:
+        """Unregister a tool."""
+        self._tools.pop(name, None)
+    
+    def get(self, name: str) -> Optional[Tool]:
+        """Get a tool."""
+        return self._tools.get(name)
+    
+    def list(self) -> list[dict[str, str]]:
+        """List all tools."""
+        return [{"name": t.name, "description": t.description} for t in self._tools.values()]
+    
+    async def execute(self, name: str, **kwargs) -> Any:
+        """Execute a tool."""
+        tool = self._tools.get(name)
+        if not tool:
+            return f"Error: Tool not found: {name}"
+        return await tool.execute(**kwargs)
+
+
+# Default registry
+_default_registry = ToolRegistry()
+
+
+def get_tools() -> ToolRegistry:
+    """Get the default tool registry."""
+    return _default_registry
