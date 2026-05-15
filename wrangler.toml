@@ -1,0 +1,13 @@
+name = "platform-agent"
+main = "src/worker.ts"
+compatibility_date = "2024-01-01"
+
+[vars]
+OLLAMA_URL = "http://localhost:11434"
+
+[[env]]
+name = "production"
+vars = { SURREALDB_URL = "https://your-db.supabase.co/rpc" }
+
+[[observability]]
+enabled = true
