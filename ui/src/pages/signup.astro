@@ -1,0 +1,152 @@
+---
+layout: ../layouts/AuthLayout.astro
+title: Sign Up
+---
+
+<div class="min-h-screen flex items-center justify-center p-4">
+  <div class="w-full max-w-md">
+    <!-- Logo -->
+    <div class="text-center mb-8">
+      <a href="/" class="inline-flex items-center gap-3">
+        <div class="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center">
+          <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+        </div>
+        <span class="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+          Platform Agent
+        </span>
+      </a>
+    </div>
+
+    <!-- Form Card -->
+    <div class="bg-gray-900/50 backdrop-blur border border-gray-800 rounded-2xl p-8">
+      <h1 class="text-2xl font-bold text-center mb-2">Create your account</h1>
+      <p class="text-gray-400 text-center mb-8">Start building with AI agents</p>
+
+      <form id="signup-form" class="space-y-5">
+        <div>
+          <label for="name" class="block text-sm font-medium text-gray-300 mb-2">Full Name</label>
+          <input 
+            type="text" 
+            id="name" 
+            name="name"
+            required
+            class="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
+            placeholder="John Doe"
+          />
+        </div>
+
+        <div>
+          <label for="email" class="block text-sm font-medium text-gray-300 mb-2">Email</label>
+          <input 
+            type="email" 
+            id="email" 
+            name="email"
+            required
+            class="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
+            placeholder="you@example.com"
+          />
+        </div>
+
+        <div>
+          <label for="password" class="block text-sm font-medium text-gray-300 mb-2">Password</label>
+          <input 
+            type="password" 
+            id="password" 
+            name="password"
+            required
+            minlength="8"
+            class="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
+            placeholder="Min 8 characters"
+          />
+        </div>
+
+        <div>
+          <label for="confirm-password" class="block text-sm font-medium text-gray-300 mb-2">Confirm Password</label>
+          <input 
+            type="password" 
+            id="confirm-password" 
+            name="confirm-password"
+            required
+            class="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
+            placeholder="••••••••"
+          />
+        </div>
+
+        <div class="flex items-start gap-2">
+          <input type="checkbox" id="terms" required class="mt-1 w-4 h-4 rounded bg-gray-800 border-gray-700 text-cyan-500 focus:ring-cyan-500" />
+          <label for="terms" class="text-sm text-gray-400">
+            I agree to the <a href="/terms" class="text-cyan-400 hover:text-cyan-300">Terms</a> and <a href="/privacy" class="text-cyan-400 hover:text-cyan-300">Privacy Policy</a>
+          </label>
+        </div>
+
+        <button 
+          type="submit"
+          class="w-full py-3 px-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold rounded-lg hover:from-cyan-400 hover:to-blue-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-all duration-200"
+        >
+          Create Account
+        </button>
+
+        <div class="relative">
+          <div class="absolute inset-0 flex items-center">
+            <div class="w-full border-t border-gray-700"></div>
+          </div>
+          <div class="relative flex justify-center text-sm">
+            <span class="px-4 bg-gray-900 text-gray-500">Or sign up with</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <button type="button" class="flex items-center justify-center gap-2 py-2.5 px-4 bg-gray-800/50 border border-gray-700 rounded-lg hover:bg-gray-700 transition-colors text-gray-300">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12.545 10.239v3.821h5.445c-.712 2.315-2.647 3.972-5.445 3.972a6.033 6.033 0 110-12.064c1.498 0 2.866.549 3.921 1.453l2.814-2.814A9.969 9.969 0 0012.545 2C7.021 2 2.543 6.477 2.543 12s4.478 10 10.002 10c8.396 0 10.249-7.85 9.426-11.748l-9.426-.013z"/>
+            </svg>
+            Google
+          </button>
+          <button type="button" class="flex items-center justify-center gap-2 py-2.5 px-4 bg-gray-800/50 border border-gray-700 rounded-lg hover:bg-gray-700 transition-colors text-gray-300">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.342-3.369-1.342-.454-1.155-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.564 9.564 0 0112 6.844c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
+            </svg>
+            GitHub
+          </button>
+        </div>
+
+        <p class="text-center text-sm text-gray-400">
+          Already have an account? 
+          <a href="/signin" class="text-cyan-400 hover:text-cyan-300 font-medium transition-colors">Sign in</a>
+        </p>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  const form = document.getElementById('signup-form');
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(form as HTMLFormElement);
+    const data = Object.fromEntries(formData);
+    
+    if (data.password !== data['confirm-password']) {
+      alert('Passwords do not match');
+      return;
+    }
+    
+    try {
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      
+      if (res.ok) {
+        window.location.href = '/chat';
+      } else {
+        alert('Registration failed');
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  });
+</script>
