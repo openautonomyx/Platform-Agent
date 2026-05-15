@@ -54,6 +54,22 @@ import Layout from '../layouts/Layout.astro';
       </div>
     </section>
     
+    <!-- Teams -->
+    <section class="card mb-6">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold">👨‍👩‍👧‍👦 Teams</h2>
+        <button id="newTeamBtn" class="btn-secondary text-sm">➕ New Team</button>
+      </div>
+      
+      <div id="teamsList" class="space-y-2">
+        <button class="w-full text-left p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition">
+          <span class="text-xl mr-2">🚀</span>
+          <span class="font-medium">Everyone</span>
+          <span class="text-sm text-gray-500 ml-2">Default team</span>
+        </button>
+      </div>
+    </section>
+    
     <!-- Danger Zone -->
     <section class="card mb-6 border-red-200">
       <h2 class="text-lg font-semibold text-red-600">⚠️ Danger Zone</h2>
@@ -91,6 +107,26 @@ import Layout from '../layouts/Layout.astro';
         <span class="text-yellow-600 text-sm">Pending</span>
       `;
       list.appendChild(div);
+    }
+  });
+  
+  // Teams
+  const teams = JSON.parse(localStorage.getItem('platform-teams') || '[]');
+  const defaultTeam = { name: 'Everyone', icon: '🚀', default: true };
+  const allTeams = [defaultTeam, ...teams];
+  
+  document.getElementById('newTeamBtn')?.addEventListener('click', () => {
+    const name = prompt('Team name:');
+    if (name) {
+      const icon = prompt('Icon (emoji):', '👥');
+      const team = { name, icon: icon || '👥' };
+      const teamsList = document.getElementById('teamsList');
+      const btn = document.createElement('button');
+      btn.className = 'w-full text-left p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition';
+      btn.innerHTML = `<span class="text-xl mr-2">${team.icon}</span><span class="font-medium">${team.name}</span>`;
+      teamsList.appendChild(btn);
+      teams.push(team);
+      localStorage.setItem('platform-teams', JSON.stringify(teams));
     }
   });
   
