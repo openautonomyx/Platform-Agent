@@ -13,6 +13,9 @@ SurrealQL-based autonomous agent.
 | **Live Queries** | ✅ | LIVE SELECT |
 | **Temporal** | ✅ | VERSION, time travel |
 | **Versioning** | ✅ | Immutable history |
+| **Vector Search** | ✅ | HNSW, cosine/euclidean/manhattan |
+| **Full-Text** | ✅ | BM25, analyzers |
+| **Hybrid Search** | ✅ | Vector + full-text RRF |
 
 ## Install
 
