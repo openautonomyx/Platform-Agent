@@ -52,7 +52,8 @@ class AgentConfig:
     surrealdb_password: str = field(default_factory=lambda: _get_env("SURREALDB_PASSWORD", "root"))
     
     # LLM settings
-    model: str = field(default_factory=lambda: _get_env("LLM_MODEL", "gpt-4o-mini"))
+    llm_provider: str = field(default_factory=lambda: _get_env("LLM_PROVIDER", "ollama"))
+    model: str = field(default_factory=lambda: _get_env("LLM_MODEL", ""))
     llm_api_key: str = field(default_factory=lambda: _get_env("LLM_API_KEY", ""))
     llm_base_url: str = field(default_factory=lambda: _get_env("LLM_BASE_URL", ""))
     temperature: float = field(default_factory=lambda: float(_get_env("LLM_TEMPERATURE", "0.7")))

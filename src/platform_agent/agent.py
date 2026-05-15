@@ -1,4 +1,4 @@
-"""Platform Agent - Uses SurrealQL for all operations + any LLM."""
+"""Platform Agent - Uses SurrealQL for all operations + configurable LLM."""
 
 import os
 from surrealdb import AsyncSurreal
@@ -6,73 +6,113 @@ from .config import AgentConfig
 
 
 # =============================================================================
-# LLM Integration - Ollama compatible (self-hosted, open)
+# LLM Integration - Configurable to any LLM provider
 # =============================================================================
 
 class LLM:
-    """Ollama LLM integration - supports any open model."""
+    """Configurable LLM - supports any provider."""
+    
+    PROVIDERS = {
+        "ollama": "http://localhost:11434",
+        "openai": "https://api.openai.com/v1",
+        "anthropic": "https://api.anthropic.com/v1",
+        "lmstudio": "http://localhost:1234/v1",
+        "litellm": "http://localhost:4000",
+    }
     
     def __init__(
         self,
+        provider: str = "ollama",
+        model: str = None,
         api_key: str = None,
-        model: str = "llama3",
-        base_url: str = "http://localhost:11434",
+        base_url: str = None,
     ):
-        self.api_key = api_key  # Not used for Ollama, but for compatibility
-        self.model = model
-        self.base_url = base_url
+        self.provider = provider
+        self.model = model or self._default_model(provider)
+        self.api_key = api_key or os.getenv("LLM_API_KEY", "")
+        self.base_url = base_url or self.PROVIDERS.get(provider, self.PROVIDERS["ollama"])
     
-    async def generate(self, messages: list, stream: bool = False) -> str:
-        """Generate response from Ollama."""
+    def _default_model(self, provider: str) -> str:
+        """Get default model for provider."""
+        defaults = {
+            "ollama": "llama3",
+            "openai": "gpt-4o-mini",
+            "anthropic": "claude-3-haiku-20240307",
+            "lmstudio": "llama3",
+            "litellm": "gpt-4o-mini",
+        }
+        return defaults.get(provider, "llama3")
+    
+    async def generate(self, messages: list) -> str:
+        """Generate response based on provider."""
+        if self.provider == "ollama":
+            return await self._ollamaChat(messages)
+        elif self.provider == "openai":
+            return await self._openaiChat(messages)
+        elif self.provider == "anthropic":
+            return await self._anthropicChat(messages)
+        else:
+            return await self._ollamaChat(messages)
+    
+    async def _ollamaChat(self, messages: list) -> str:
+        """Ollama chat."""
+        import ollama
+        client = ollama.Client(self.base_url)
+        
+        response = client.chat(model=self.model, messages=messages)
+        return response["message"]["content"]
+    
+    async def _openaiChat(self, messages: list) -> str:
+        """OpenAI chat."""
         import aiohttp
         
-        # Convert to Ollama format
-        ollama_messages = []
-        for msg in messages:
-            # Map roles
-            role = msg["role"]
-            if role == "system":
-                role = "system"
-            elif role == "assistant":
-                role = "assistant"
-            else:
-                role = "user"
-            ollama_messages.append({
-                "role": role,
-                "content": msg["content"],
-            })
-        
-        payload = {
-            "model": self.model,
-            "messages": ollama_messages,
-            "stream": stream,
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
         }
         
         async with aiohttp.ClientSession() as session:
             async with session.post(
-                f"{self.base_url}/api/chat",
-                json=payload,
+                f"{self.base_url}/chat/completions",
+                headers=headers,
+                json={"model": self.model, "messages": messages},
             ) as resp:
                 data = await resp.json()
-                return data["message"]["content"]
+                return data["choices"][0]["message"]["content"]
+    
+    async def _anthropicChat(self, messages: list) -> str:
+        """Anthropic chat."""
+        import aiohttp
+        
+        headers = {
+            "x-api-key": self.api_key,
+            "anthropic-version": "2023-06-01",
+            "Content-Type": "application/json",
+        }
+        
+        # Convert messages to Anthropic format
+        system = ""
+        for msg in messages:
+            if msg.get("role") == "system":
+                system = msg.get("content", "")
+        
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                f"{self.base_url}/messages",
+                headers=headers,
+                json={
+                    "model": self.model,
+                    "max_tokens": 1024,
+                    "messages": [m for m in messages if m.get("role") != "system"],
+                    "system": system,
+                },
+            ) as resp:
+                data = await resp.json()
+                return data["content"][0]["text"]
     
     async def generate_raw(self, prompt: str) -> str:
-        """Simple generate (non-chat) for testing."""
-        import aiohttp
-        
-        payload = {
-            "model": self.model,
-            "prompt": prompt,
-            "stream": False,
-        }
-        
-        async with aiohttp.ClientSession() as session:
-            async with session.post(
-                f"{self.base_url}/api/generate",
-                json=payload,
-            ) as resp:
-                data = await resp.json()
-                return data["response"]
+        """Simple generate."""
+        return await self.generate([{"role": "user", "content": prompt}])
 
 
 class PlatformAgent:
