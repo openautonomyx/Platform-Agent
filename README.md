@@ -11,6 +11,8 @@ SurrealQL-based autonomous agent.
 | **Relations** | ✅ | Record links |
 | **Events** | ✅ | DEFINE EVENT |
 | **Live Queries** | ✅ | LIVE SELECT |
+| **Temporal** | ✅ | VERSION, time travel |
+| **Versioning** | ✅ | Immutable history |
 
 ## Install
 
