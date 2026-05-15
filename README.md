@@ -6,7 +6,9 @@
   <img src="https://img.shields.io/github/license/openautonomyx/Platform-Agent.svg" alt="License">
 </p>
 
-> An autonomous AI agent platform with **SurrealDB-native** storage
+> An autonomous AI agent platform powered by **SurrealDB**
+> 
+> Platform Agent inherits SurrealDB's compliance: SOC 2, ISO 27001, HIPAA, GDPR
 
 ## Features (All SurrealDB-native)
 
