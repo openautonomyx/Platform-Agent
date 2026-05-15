@@ -1,22 +1,9 @@
-# Platform Agent - K3s Light (single file, minimal)
-
-# =============================================================================
-# Quick Deploy (K3s/Traefik built-in)
-# =============================================================================
+# Platform Agent - K3s
 
 apiVersion: v1
 kind: Namespace
 metadata:
   name: platform
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: platforment
-  namespace: platform
-data:
-  OLLAMA_URL: "http://ollama:11434"
-  LLM_PROVIDER: "ollama"
 ---
 apiVersion: v1
 kind: Secret
@@ -63,43 +50,6 @@ spec:
   selector:
     app: surrealdb
 ---
-# Ollama (GPU recommended)
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: ollama
-  namespace: platform
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: ollama
-  template:
-    metadata:
-      labels:
-        app: ollama
-    spec:
-      containers:
-        - name: ollama
-          image: ollama/ollama:latest
-          ports:
-            - containerPort: 11434
-          resources:
-            limits:
-              nvidia.com/gpu: 1
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: ollama
-  namespace: platform
-spec:
-  ports:
-    - port: 11434
-      targetPort: 11434
-  selector:
-    app: ollama
----
 # API
 apiVersion: apps/v1
 kind: Deployment
@@ -121,9 +71,12 @@ spec:
           image: platform-agent/api:latest
           ports:
             - containerPort: 3000
+          env:
+            - name: SURREALDB_URL
+              value: "ws://surrealdb:8000/rpc"
+            - name: LLM_PROVIDER
+              value: "openai"
           envFrom:
-            - configMapRef:
-                name: platform-agent
             - secretRef:
                 name: platform-agent
 ---
