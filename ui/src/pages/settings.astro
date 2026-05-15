@@ -1,0 +1,226 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { Filled } from 'fluentui-emoji';
+
+const providers = [
+  { id: 'ollama', name: 'Ollama', desc: 'Local CPU', icon: '💻' },
+  { id: 'llama.cpp', name: 'llama.cpp', desc: 'Local CPU', icon: '⚡' },
+  { id: 'llama-server', name: 'llama-server', desc: 'Local CPU', icon: '🖥️' },
+  { id: 'openai', name: 'OpenAI', desc: 'Cloud', icon: '🌐' },
+  { id: 'anthropic', name: 'Anthropic', desc: 'Cloud', icon: '🧠' },
+  { id: 'cohere', name: 'Cohere', desc: 'Cloud', icon: '🔗' },
+  { id: 'google', name: 'Google Gemini', desc: 'Cloud', icon: '🔵' },
+  { id: 'mistral', name: 'Mistral', desc: 'Cloud', icon: '🌟' },
+  { id: 'groq', name: 'Groq', desc: 'Cloud', icon: '⚡' },
+  { id: 'huggingface', name: 'HuggingFace', desc: 'Cloud/API', icon: '🤗' },
+  { id: 'vllm', name: 'vLLM', desc: 'GPU Server', icon: '🎮' },
+  { id: 'litellm', name: 'LiteLLM', desc: 'Proxy', icon: '🔄' },
+];
+
+const models = {
+  'ollama': ['tinyllama', 'llama3', 'mistral', 'phi3'],
+  'openai': ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo'],
+  'anthropic': ['claude-3-opus', 'claude-3-sonnet', 'claude-3-haiku'],
+  'google': ['gemini-1.5-pro', 'gemini-1.5-flash'],
+  'cohere': ['command-r-plus', 'command-r'],
+  'huggingface': ['TinyLlama/TinyLlama-1.1B-Chat', 'microsoft/Phi-3-mini-4k'],
+};
+---
+
+<Layout title="Settings | Platform Agent">
+  <div class="max-w-2xl mx-auto py-8">
+    <h1 class="text-3xl font-bold mb-8">⚙️ Settings</h1>
+    
+    <!-- LLM Provider -->
+    <section class="card mb-6">
+      <h2 class="text-xl font-semibold mb-4">🤖 LLM Provider</h2>
+      
+      <div class="grid grid-cols-3 gap-3 mb-4">
+        {providers.map(p => (
+          <button
+            class="provider-btn p-3 rounded-lg border-2 text-left hover:border-primary transition"
+            data-provider={p.id}
+          >
+            <div class="text-2xl mb-1">{p.icon}</div>
+            <div class="font-medium">{p.name}</div>
+            <div class="text-xs text-gray-500">{p.desc}</div>
+          </button>
+        ))}
+      </div>
+      
+      <input type="hidden" id="provider" name="provider" value="ollama" />
+    </section>
+    
+    <!-- Model -->
+    <section class="card mb-6">
+      <h2 class="text-xl font-semibold mb-4">📦 Model</h2>
+      <select id="model" name="model" class="input">
+        <option value="">Select provider first</option>
+      </select>
+    </section>
+    
+    <!-- API Key -->
+    <section class="card mb-6">
+      <h2 class="text-xl font-semibold mb-4">🔑 API Key</h2>
+      <input
+        type="password"
+        id="apiKey"
+        name="apiKey"
+        class="input"
+        placeholder="sk-..."
+      />
+      <p class="text-sm text-gray-500 mt-2">
+        Leave empty for local providers
+      </p>
+    </section>
+    
+    <!-- Base URL -->
+    <section class="card mb-6">
+      <h2 class="text-xl font-semibold mb-4">🔗 Base URL</h2>
+      <input
+        type="url"
+        id="baseUrl"
+        name="baseUrl"
+        class="input"
+        placeholder="http://localhost:11434"
+      />
+    </section>
+    
+    <!-- SurrealDB -->
+    <section class="card mb-6">
+      <h2 class="text-xl font-semibold mb-4">🗄️ SurrealDB</h2>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm mb-1">URL</label>
+          <input
+            type="url"
+            id="surrealdbUrl"
+            name="surrealdbUrl"
+            class="input"
+            placeholder="ws://localhost:8000/rpc"
+          />
+        </div>
+        <div>
+          <label class="block text-sm mb-1">Namespace</label>
+          <input
+            type="text"
+            id="surrealdbNs"
+            name="surrealdbNs"
+            class="input"
+            placeholder="platform"
+          />
+        </div>
+        <div>
+          <label class="block text-sm mb-1">Database</label>
+          <input
+            type="text"
+            id="surrealdbDb"
+            name="surrealdbDb"
+            class="input"
+            placeholder="agent"
+          />
+        </div>
+        <div>
+          <label class="block text-sm mb-1">Username</label>
+          <input
+            type="text"
+            id="surrealdbUser"
+            name="surrealdbUser"
+            class="input"
+            placeholder="root"
+          />
+        </div>
+      </div>
+    </section>
+    
+    <!-- Save -->
+    <button id="saveBtn" class="btn-primary w-full">
+      💾 Save Settings
+    </button>
+    
+    <!-- Status -->
+    <div id="status" class="mt-4 p-3 rounded-lg hidden"></div>
+  </div>
+</Layout>
+
+<script define:vars={{ models }}>
+  // Provider selection
+  document.querySelectorAll('.provider-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.provider-btn').forEach(b => b.classList.remove('border-primary', 'bg-primary/10'));
+      btn.classList.add('border-primary', 'bg-primary/10');
+      document.getElementById('provider').value = btn.dataset.provider;
+      
+      // Update models dropdown
+      const modelSelect = document.getElementById('model');
+      const provider = btn.dataset.provider;
+      const modelList = models[provider] || [];
+      
+      modelSelect.innerHTML = modelList.length
+        ? modelList.map(m => `<option value="${m}">${m}</option>`).join('')
+        : '<option value="">Use default</option>';
+    });
+  });
+  
+  // Save settings
+  document.getElementById('saveBtn').addEventListener('click', async () => {
+    const settings = {
+      provider: document.getElementById('provider').value,
+      model: document.getElementById('model').value,
+      apiKey: document.getElementById('apiKey').value,
+      baseUrl: document.getElementById('baseUrl').value,
+      surrealdbUrl: document.getElementById('surrealdbUrl').value,
+      surrealdbNs: document.getElementById('surrealdbNs').value,
+      surrealdbDb: document.getElementById('surrealdbDb').value,
+      surrealdbUser: document.getElementById('surrealdbUser').value,
+    };
+    
+    // Save to localStorage
+    localStorage.setItem('platform-agent-settings', JSON.stringify(settings));
+    
+    // Show status
+    const status = document.getElementById('status');
+    status.textContent = '✅ Settings saved!';
+    status.classList.remove('hidden');
+    status.classList.add('bg-green-100', 'text-green-800');
+  });
+  
+  // Load settings on page load
+  const saved = localStorage.getItem('platform-agent-settings');
+  if (saved) {
+    const settings = JSON.parse(saved);
+    document.getElementById('provider').value = settings.provider || 'ollama';
+    if (settings.model) document.getElementById('model').value = settings.model;
+    if (settings.apiKey) document.getElementById('apiKey').value = settings.apiKey;
+    if (settings.baseUrl) document.getElementById('baseUrl').value = settings.baseUrl;
+    if (settings.surrealdbUrl) document.getElementById('surrealdbUrl').value = settings.surrealdbUrl;
+    if (settings.surrealdbNs) document.getElementById('surrealdbNs').value = settings.surrealdbNs;
+    if (settings.surrealdbDb) document.getElementById('surrealdbDb').value = settings.surrealdbDb;
+    if (settings.surrealdbUser) document.getElementById('surrealdbUser').value = settings.surrealdbUser;
+  }
+</script>
+
+<style>
+  .card {
+    @apply bg-white rounded-xl p-6 shadow-sm border border-gray-200;
+  }
+  .input {
+    @apply w-full px-4 py-2 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition;
+  }
+  .btn-primary {
+    @apply px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition;
+  }
+  .border-primary {
+    @apply border-blue-500;
+  }
+  .bg-primary {
+    @apply bg-blue-500;
+  }
+  .bg-primary\/10 {
+    @apply bg-blue-500/10;
+  }
+  .ring-primary\/20 {
+    --tw-ring-color: rgb(59 130 246 / 0.2);
+  }
+</style>
+</Layout>
