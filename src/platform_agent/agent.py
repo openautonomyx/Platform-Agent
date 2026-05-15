@@ -351,8 +351,65 @@ class SurrealMemory:
         return await self._db.select("relations")
     
     # -------------------------------------------------------------------------
-    # Raw Query
+    # Sessions (Prompt-Response Storage)
     # -------------------------------------------------------------------------
+    
+    async def create_session(
+        self,
+        session_id: Optional[str] = None,
+        metadata: Optional[dict] = None,
+    ) -> dict:
+        """Create a new conversation session."""
+        import uuid
+        sid = session_id or str(uuid.uuid4())
+        
+        record = {
+            "id": sid,
+            "created_at": datetime.now().isoformat(),
+            "metadata": metadata or {},
+            "message_count": 0,
+        }
+        
+        await self._db.create("sessions", record)
+        return record
+    
+    async def get_session(self, session_id: str) -> Optional[dict]:
+        """Get a session by ID."""
+        results = await self._db.query(f"SELECT * FROM sessions WHERE id = '{session_id}' LIMIT 1")
+        return results[0] if results else None
+    
+    async def add_message(
+        self,
+        session_id: str,
+        role: str,
+        content: str,
+    ) -> dict:
+        """Add a message to a session."""
+        record = {
+            "session": session_id,
+            "role": role,
+            "content": content,
+            "timestamp": datetime.now().isoformat(),
+        }
+        
+        await self._db.create("messages", record)
+        
+        # Update session counter
+        await self._db.query(
+            f"UPDATE sessions SET message_count = message_count + 1 WHERE id = '{session_id}'"
+        )
+        
+        return record
+    
+    async def get_messages(
+        self,
+        session_id: str,
+        limit: int = 50,
+    ) -> list:
+        """Get messages from a session."""
+        return await self._db.query(
+            f"SELECT * FROM messages WHERE session = '{session_id}' ORDER BY timestamp ASC LIMIT {limit}"
+        )
     
     async def query(
         self,
@@ -442,8 +499,82 @@ class PlatformAgent:
         ])
     
     # -------------------------------------------------------------------------
-    # High-level API
+    # RAG (Retrieval Augmented Generation)
     # -------------------------------------------------------------------------
+    
+    async def rag(
+        self,
+        query: str,
+        limit: int = 5,
+    ) -> dict:
+        """RAG: Combine vector search + full-text + graph in single query.
+        
+        Returns dict with:
+        - documents: Vector similarity results
+        - conversations: Full-text search results  
+        - knowledge: Graph traversal results
+        """
+        results = {
+            "query": query,
+            "documents": [],
+            "conversations": [],
+            "knowledge": [],
+        }
+        
+        # Vector search
+        try:
+            results["documents"] = await self.search(query, limit=limit)
+        except Exception:
+            pass
+        
+        # Full-text search
+        try:
+            results["conversations"] = await self._memory.search_conversations(query, limit=limit)
+        except Exception:
+            pass
+        
+        # Graph RAG - extract entities and traverse
+        try:
+            # Simple keyword extraction (placeholder)
+            words = query.split()
+            for word in words[:3]:
+                entity = await self._memory.get_entity(word)
+                if entity:
+                    results["knowledge"].append(entity)
+        except Exception:
+            pass
+        
+        return results
+    
+    async def graph_rag(
+        self,
+        query: str,
+        max_depth: int = 2,
+    ) -> list:
+        """Graph RAG: Knowledge graph traversal for context.
+        
+        Args:
+            query: Search query
+            max_depth: Maximum graph traversal depth
+            
+        Returns:
+            List of connected entities and facts
+        """
+        # Extract key terms (simplified)
+        terms = query.lower().split()
+        context = []
+        
+        for term in terms[:3]:
+            entity = await self._memory.get_entity(term)
+            if entity:
+                # Get relations
+                relations = await self._memory.get_relations(entity=term)
+                context.append({
+                    "entity": entity,
+                    "relations": relations,
+                })
+        
+        return context
     
     async def remember(
         self,
