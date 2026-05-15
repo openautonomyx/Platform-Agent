@@ -1,0 +1,35 @@
+# Platform Agent - Docker Compose
+
+services:
+  # SurrealDB
+  surrealdb:
+    image: surrealdb/surrealdb:latest
+    ports:
+      - "8000:8000"
+    command: start memory --user root --pass root
+    volumes:
+      - surrealdb:/var/lib/surrealdb
+  
+  # API
+  api:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - SURREALDB_URL=ws://surrealdb:8000/nospace/db
+      - SURREALDB_USER=root
+      - SURREALDB_PASS=root
+      - LLM_PROVIDER=ollama
+    depends_on:
+      - surrealdb
+  
+  # UI
+  ui:
+    build: ./ui
+    ports:
+      - "3000:3000"
+    environment:
+      - API_URL=http://api:8080
+
+volumes:
+  surrealdb:
