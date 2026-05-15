@@ -1,0 +1,14 @@
+name = "platform-agent"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+[vars]
+LLM_PROVIDER = "openai"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "platform-agent"
+database_id = "your-database-id"
+
+[deploy]
+# Deploy with: npx wrangler deploy

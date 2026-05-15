@@ -1,0 +1,158 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Canvas | Platform Agent">
+  <div class="flex flex-col h-screen bg-gray-50">
+    <!-- Toolbar -->
+    <div class="bg-white border-b px-4 py-2 flex items-center gap-2">
+      <button id="pencil" class="tool-btn active" title="Pencil">✏️</button>
+      <button id="brush" class="tool-btn" title="Brush">🖌️</button>
+      <button id="eraser" class="tool-btn" title="Eraser">🧹</button>
+      <span class="w-px h-6 bg-gray-300"></span>
+      <input type="color" id="color" value="#000000" class="w-8 h-8 rounded" />
+      <input type="range" id="size" min="1" max="50" value="2" class="w-20" />
+      <span class="text-sm" id="sizeLabel">2px</span>
+      <span class="w-px h-6 bg-gray-300"></span>
+      <button id="clear" class="tool-btn">🗑️ Clear</button>
+      <button id="undo" class="tool-btn">↩️ Undo</button>
+      <button id="save" class="tool-btn">💾 Save</button>
+    </div>
+    
+    <!-- Canvas -->
+    <canvas id="canvas" class="flex-1 bg-white cursor-crosshair"></canvas>
+  </div>
+</Layout>
+
+<script>
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  
+  let isDrawing = false;
+  let lastX = 0, lastY = 0;
+  let tool = 'pencil';
+  let color = '#000000';
+  let size = 2;
+  let history: ImageData[] = [];
+  let historyStep = -1;
+  
+  // Resize
+  function resize() {
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    saveState();
+  }
+  
+  window.addEventListener('resize', resize);
+  resize();
+  
+  // Save state for undo
+  function saveState() {
+    history = history.slice(0, historyStep + 1);
+    history.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+    historyStep++;
+  }
+  
+  // Drawing
+  function startDraw(e) {
+    isDrawing = true;
+    [lastX, lastY] = [e.offsetX, e.offsetY];
+  }
+  
+  function draw(e) {
+    if (!isDrawing) return;
+    
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY);
+    ctx.lineTo(e.offsetX, e.offsetY);
+    ctx.strokeStyle = tool === 'eraser' ? 'white' : color;
+    ctx.lineWidth = tool === 'eraser' ? 20 : size;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+    
+    [lastX, lastY] = [e.offsetX, e.offsetY];
+  }
+  
+  function stopDraw() {
+    if (isDrawing) {
+      isDrawing = false;
+      saveState();
+    }
+  }
+  
+  canvas.addEventListener('mousedown', startDraw);
+  canvas.addEventListener('mousemove', draw);
+  canvas.addEventListener('mouseup', stopDraw);
+  canvas.addEventListener('mouseout', stopDraw);
+  
+  // Touch support
+  canvas.addEventListener('touchstart', e => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    startDraw({ offsetX: touch.clientX - rect.left, offsetY: touch.clientY - rect.top });
+  });
+  
+  canvas.addEventListener('touchmove', e => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    draw({ offsetX: touch.clientX - rect.left, offsetY: touch.clientY - rect.top });
+  });
+  
+  canvas.addEventListener('touchend', stopDraw);
+  
+  // Tools
+  document.getElementById('pencil')?.addEventListener('click', () => tool = 'pencil');
+  document.getElementById('brush')?.addEventListener('click', () => tool = 'brush');
+  document.getElementById('eraser')?.addEventListener('click', () => tool = 'eraser');
+  
+  // Color & Size
+  document.getElementById('color')?.addEventListener('input', e => {
+    color = (e.target as HTMLInputElement).value;
+  });
+  
+  document.getElementById('size')?.addEventListener('input', e => {
+    size = parseInt((e.target as HTMLInputElement).value);
+    document.getElementById('sizeLabel')!.textContent = size + 'px';
+  });
+  
+  // Clear
+  document.getElementById('clear')?.addEventListener('click', () => {
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    saveState();
+  });
+  
+  // Undo
+  document.getElementById('undo')?.addEventListener('click', () => {
+    if (historyStep > 0) {
+      historyStep--;
+      ctx.putImageData(history[historyStep], 0, 0);
+    }
+  });
+  
+  // Save
+  document.getElementById('save')?.addEventListener('click', () => {
+    const link = document.createElement('a');
+    link.download = 'canvas-' + Date.now() + '.png';
+    link.href = canvas.toDataURL();
+    link.click();
+  });
+</script>
+
+<style>
+  .tool-btn {
+    @apply px-3 py-1.5 rounded-lg hover:bg-gray-100 transition;
+  }
+  .tool-btn.active {
+    @apply bg-blue-100 text-blue-600;
+  }
+  input[type="color"] {
+    @apply cursor-pointer rounded;
+  }
+</style>
+</Layout>
