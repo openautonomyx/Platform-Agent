@@ -14,6 +14,8 @@ class LLM:
     
     PROVIDERS = {
         "ollama": "http://localhost:11434",
+        "llama.cpp": "http://localhost:8080",
+        "llama-server": "http://localhost:8080",
         "openai": "https://api.openai.com/v1",
         "anthropic": "https://api.anthropic.com/v1",
         "lmstudio": "http://localhost:1234/v1",
@@ -35,13 +37,15 @@ class LLM:
     def _default_model(self, provider: str) -> str:
         """Get default model for provider."""
         defaults = {
-            "ollama": "llama3",
+            "ollama": "tinyllama",
+            "llama.cpp": "model.gguf",
+            "llama-server": "model.gguf",
             "openai": "gpt-4o-mini",
             "anthropic": "claude-3-haiku-20240307",
-            "lmstudio": "llama3",
+            "lmstudio": "tinyllama",
             "litellm": "gpt-4o-mini",
         }
-        return defaults.get(provider, "llama3")
+        return defaults.get(provider, "tinyllama")
     
     async def generate(self, messages: list) -> str:
         """Generate response based on provider."""
