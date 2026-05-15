@@ -1,0 +1,48 @@
+# Platform Agent - Stacker OCI Image
+
+# OCI Image using Stacker format (stackerbuild.io)
+---
+name: platform-agent
+version: "0.1.0"
+
+from:
+    type: base
+    description: Python 3.11 slim
+    url: docker.io/library/python:3.11-slim
+
+run: |
+    # Install uv
+    RUN pip install uv
+    
+    # Install deps
+    RUN uv sync --frozen --no-dev
+    
+    # Add user
+    RUN useradd -m appuser
+
+    USER appuser
+    WORKDIR /app
+
+    EXPOSE 8080
+
+    CMD ["uv", "run", "python", "-m", "platform_agent"]
+
+---
+name: platform-agent-ui
+version: "0.1.0"
+
+from:
+    type: base
+    description: Node 20 Alpine
+    url: docker.io/library/node:20-alpine
+
+run: |
+    # Install deps
+    RUN npm install
+    
+    # Build
+    RUN npm run build
+
+    EXPOSE 3000
+
+    CMD ["npm", "run", "preview"]
