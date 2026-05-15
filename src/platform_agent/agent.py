@@ -1,15 +1,87 @@
-"""Platform Agent - Uses SurrealQL for all operations."""
+"""Platform Agent - Uses SurrealQL for all operations + any LLM."""
 
+import os
 from surrealdb import AsyncSurreal
 from .config import AgentConfig
 
 
+# =============================================================================
+# LLM Integration - Ollama compatible (self-hosted, open)
+# =============================================================================
+
+class LLM:
+    """Ollama LLM integration - supports any open model."""
+    
+    def __init__(
+        self,
+        api_key: str = None,
+        model: str = "llama3",
+        base_url: str = "http://localhost:11434",
+    ):
+        self.api_key = api_key  # Not used for Ollama, but for compatibility
+        self.model = model
+        self.base_url = base_url
+    
+    async def generate(self, messages: list, stream: bool = False) -> str:
+        """Generate response from Ollama."""
+        import aiohttp
+        
+        # Convert to Ollama format
+        ollama_messages = []
+        for msg in messages:
+            # Map roles
+            role = msg["role"]
+            if role == "system":
+                role = "system"
+            elif role == "assistant":
+                role = "assistant"
+            else:
+                role = "user"
+            ollama_messages.append({
+                "role": role,
+                "content": msg["content"],
+            })
+        
+        payload = {
+            "model": self.model,
+            "messages": ollama_messages,
+            "stream": stream,
+        }
+        
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                f"{self.base_url}/api/chat",
+                json=payload,
+            ) as resp:
+                data = await resp.json()
+                return data["message"]["content"]
+    
+    async def generate_raw(self, prompt: str) -> str:
+        """Simple generate (non-chat) for testing."""
+        import aiohttp
+        
+        payload = {
+            "model": self.model,
+            "prompt": prompt,
+            "stream": False,
+        }
+        
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                f"{self.base_url}/api/generate",
+                json=payload,
+            ) as resp:
+                data = await resp.json()
+                return data["response"]
+
+
 class PlatformAgent:
-    """Agent that uses SurrealQL for all operations."""
+    """Agent that uses SurrealQL + LLM."""
     
     def __init__(self, config: AgentConfig = None):
         self.config = config or AgentConfig()
         self.db = None
+        self.llm = LLM(api_key=config.llm_api_key if config else None)
     
     async def connect(self):
         self.db = AsyncSurreal(self.config.surrealdb_url)
@@ -31,15 +103,38 @@ class PlatformAgent:
     # SurrealQL Operations
     # -------------------------------------------------------------------------
     
-    async def think(self, query: str) -> str:
-        """Process query using SurrealQL."""
+    async def think(self, query: str, stream: bool = False) -> str:
+        """Process query using SurrealQL + LLM."""
+        
+        # Get conversation history from SurrealDB
+        history = await self.db.query(
+            "SELECT query, response FROM conversations ORDER BY timestamp DESC LIMIT 10"
+        )
+        
+        # Build messages
+        messages = [
+            {"role": "system", "content": "You are Platform Agent, an AI assistant powered by SurrealDB."}
+        ]
+        
+        # Add history
+        for msg in reversed(history):
+            messages.append({"role": "user", "content": msg.get("query", "")})
+            messages.append({"role": "assistant", "content": msg.get("response", "")})
+        
+        # Add current query
+        messages.append({"role": "user", "content": query})
+        
+        # Generate response
+        response = await self.llm.generate(messages)
+        
         # Store conversation
         await self.db.create("conversations", {
             "query": query,
-            "response": f"Agent: {query}",
+            "response": response,
             "timestamp": "time::now()",
         })
-        return f"Agent: {query}"
+        
+        return response
     
     async def remember(self, content: str, memory_type: str = "general") -> dict:
         """Store memory using SurrealQL."""
