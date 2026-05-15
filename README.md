@@ -20,6 +20,9 @@ SurrealQL-based autonomous agent.
 | **Graph** | ✅ | ->traverse, RELATE |
 | **Functions** | ✅ | math, string, array, vector |
 | **File Storage** | ✅ | DEFINE BUCKET, file::put/get |
+| **Multi-tenancy** | ✅ | Namespaces, databases |
+| **Embedded** | ✅ | In-memory, WASM, edge |
+| **Change Data Capture** | ✅ | SHOW CHANGES |
 
 ## Install
 
