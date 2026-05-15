@@ -78,6 +78,11 @@ spec:
               value: "0.0.0.0"
             - name: PORT
               value: "8080"
+            # Model loaded at startup (auto-download or mount)
+            - name: MODEL
+              value: "tinyllama-1.1b-chat.Q4_0.gguf"
+            - name: N_GPU_LAYERS
+              value: "0"  # CPU only
           resources:
             requests:
               memory: "4Gi"
@@ -85,6 +90,13 @@ spec:
             limits:
               memory: "8Gi"
               cpu: "4"
+          # Mount model (optional: use ConfigMap or PVC)
+          volumeMounts:
+            - name: models
+              mountPath: /models
+      volumes:
+        - name: models
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
