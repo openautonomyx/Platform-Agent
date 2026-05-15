@@ -1,4 +1,4 @@
-# Platform Agent - K3s
+# Platform Agent - K3s (Zot)
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
         - name: platform-agent
-          image: ghcr.io/openautonomyx/platform-agent:latest
+          image: zot.example.com/platform-agent:latest
           envFrom:
             - configMapRef:
                 name: platform-agent

@@ -1,4 +1,4 @@
-# Platform Agent - Stacker OCI
+# Platform Agent - Stacker OCI → Zot
 name: platform-agent
 version: "0.1.0"
 
@@ -12,3 +12,8 @@ run: |
   RUN uv sync --frozen --no-dev
   EXPOSE 8080
   CMD ["uv", "run", "python", "-m", "platform_agent"]
+
+destinations:
+  - type: zot
+    url: $ZOT_URL
+    push: true
