@@ -19,6 +19,7 @@ SurrealQL-based autonomous agent.
 | **SurrealQL** | ✅ | SELECT, CREATE, UPDATE, RELATE |
 | **Graph** | ✅ | ->traverse, RELATE |
 | **Functions** | ✅ | math, string, array, vector |
+| **File Storage** | ✅ | DEFINE BUCKET, file::put/get |
 
 ## Install
 
