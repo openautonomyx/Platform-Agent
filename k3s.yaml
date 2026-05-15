@@ -1,44 +1,16 @@
-# Platform Agent - K3s (SurrealDB in ConfigMap)
----
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: platform-agent
+# Platform Agent - K3s (Lightweight)
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  namespace: platform-agent
   name: platform-agent
 data:
-  # SurrealDB (external)
-  SURREALDB_URL: "wss://surrealdb.example.com/rpc"
-  SURREALDB_USER: "root"
-  SURREALDB_PASS: "change-me"
-  SURREALDB_NS: "nospace"
-  SURREALDB_DB: "platform"
-  
-  # LLM
+  SURREALDB_URL: "wss://surrealdb.example.com"
   LLM_PROVIDER: "ollama"
-  LLM_MODEL: "llama3"
-  LLM_BASE_URL: "http://localhost:11434"
----
-apiVersion: v1
-kind: Service
-metadata:
-  namespace: platform-agent
-  name: platform-agent
-spec:
-  ports:
-    - port: 8080
-      targetPort: 8080
-  selector:
-    app: platform-agent
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: platform-agent
   name: platform-agent
 spec:
   replicas: 1
@@ -59,15 +31,24 @@ spec:
           ports:
             - containerPort: 8080
 ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: platform-agent
+spec:
+  ports:
+    - port: 80
+      targetPort: 8080
+  selector:
+    app: platform-agent
+---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  namespace: platform-agent
   name: platform-agent
 spec:
   rules:
-    - host: platform.local
-      http:
+    - http:
         paths:
           - path: /
             pathType: Prefix
@@ -75,4 +56,4 @@ spec:
               service:
                 name: platform-agent
                 port:
-                  number: 8080
+                  number: 80
