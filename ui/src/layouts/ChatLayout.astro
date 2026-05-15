@@ -14,21 +14,26 @@ const { title } = Astro.props;
     <title>{title} | Platform Agent</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   </head>
-  <body class="bg-gray-950 text-white h-screen overflow-hidden flex">
-    <!-- Sidebar -->
-    <nav class="w-16 bg-gray-900 flex flex-col items-center py-4 gap-2">
-      <a href="/" class="p-3 rounded-lg hover:bg-gray-800" title="Home">🏠</a>
-      <a href="/chat" class="p-3 rounded-lg bg-gray-800" title="Chat">💬</a>
-      <a href="/graph" class="p-3 rounded-lg hover:bg-gray-800" title="Graph">🔗</a>
-      <a href="/canvas" class="p-3 rounded-lg hover:bg-gray-800" title="Canvas">🎨</a>
-      <div class="flex-1"></div>
-      <a href="/settings" class="p-3 rounded-lg hover:bg-gray-800" title="Settings">⚙️</a>
-      <a href="/profile" class="p-3 rounded-lg hover:bg-gray-800" title="Profile">👤</a>
-      <a href="/organization" class="p-3 rounded-lg hover:bg-gray-800" title="Org">🏢</a>
+  <body class="bg-gray-950 text-white h-screen overflow-hidden flex flex-col">
+    <!-- Main Nav -->
+    <nav class="border-b border-gray-800 px-4 py-2 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="/" class="text-lg font-bold">🤖</a>
+        <div class="flex gap-1 text-sm text-gray-400">
+          <a href="/" class="px-3 py-1 rounded-lg bg-gray-800">💬 Chat</a>
+          <a href="/graph" class="px-3 py-1 rounded-lg hover:bg-gray-800">🔗</a>
+          <a href="/canvas" class="px-3 py-1 rounded-lg hover:bg-gray-800">🎨</a>
+        </div>
+      </div>
+      <div class="flex gap-1 text-gray-400">
+        <a href="/settings" class="px-2 py-1 rounded-lg hover:bg-gray-800" title="Settings">⚙️</a>
+        <a href="/profile" class="px-2 py-1 rounded-lg hover:bg-gray-800" title="Profile">👤</a>
+        <a href="/organization" class="px-2 py-1 rounded-lg hover:bg-gray-800" title="Org">🏢</a>
+      </div>
     </nav>
-    <main class="flex-1 overflow-hidden">
+    <div class="flex-1 flex overflow-hidden">
       <slot />
-    </main>
+    </div>
   </body>
 </html>
 
