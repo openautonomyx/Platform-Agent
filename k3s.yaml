@@ -1,5 +1,4 @@
-# Platform Agent - K3s (Lightweight)
----
+# Platform Agent - K3s
 apiVersion: v1
 kind: ConfigMap
 metadata:

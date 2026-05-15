@@ -1,42 +1,14 @@
-# Platform Agent - Stacker OCI Image (Single)
-
+# Platform Agent - Stacker OCI
 name: platform-agent
 version: "0.1.0"
 
 from:
-    type: base
-    description: Python 3.11 slim + Node 20
-    url: docker.io/library/python:3.11-slim
+  url: docker.io/library/python:3.11-slim
 
 run: |
-    # Install Node.js
-    RUN apt-get update && apt-get install -y curl && \
-        curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
-        apt-get install -y nodejs && rm -rf /var/lib/apt/lists/*
-    
-    # Install uv
-    RUN pip install uv
-    
-    # Copy Python app
-    COPY src/ /app/src/
-    COPY pyproject.toml /app/
-    
-    # Copy UI
-    COPY ui/ /app/ui/
-    WORKDIR /app/ui
-    RUN npm install && npm run build
-    WORKDIR /app
-    
-    # Install Python deps
-    RUN uv sync --frozen --no-dev
-    
-    # Add user
-    RUN useradd -m appuser
-    USER appuser
-    WORKDIR /app
-
-    # Expose both ports
-    EXPOSE 8080 3000
-    
-    # Run both
-    CMD ["sh", "-c", "uv run python -m platform_agent & npm run preview --prefix ui"]
+  RUN pip install uv
+  COPY src/ /app/src/
+  COPY pyproject.toml /app/
+  RUN uv sync --frozen --no-dev
+  EXPOSE 8080
+  CMD ["uv", "run", "python", "-m", "platform_agent"]
