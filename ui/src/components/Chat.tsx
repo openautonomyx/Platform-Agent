@@ -11,13 +11,14 @@ export default function Chat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [streamingContent, setStreamingContent] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  useEffect(scrollToBottom, [messages]);
+  useEffect(scrollToBottom, [messages, streamingContent]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,24 +34,43 @@ export default function Chat() {
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
+    setStreamingContent('');
 
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: input }),
+        body: JSON.stringify({ message: input, stream: true }),
       });
 
-      const data = await res.json();
+      if (!res.ok) throw new Error('Failed to fetch');
 
+      const reader = res.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (!reader) throw new Error('No reader');
+
+      let content = '';
+      
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        const chunk = decoder.decode(value);
+        content += chunk;
+        setStreamingContent(content);
+      }
+
+      // Add final message
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: data.response || 'No response',
+        content: content,
         timestamp: new Date(),
       };
 
       setMessages(prev => [...prev, assistantMessage]);
+      setStreamingContent('');
     } catch (err) {
       console.error(err);
     } finally {
@@ -164,18 +184,17 @@ export default function Chat() {
             </div>
           ))}
 
-          {isLoading && (
+          {isLoading && streamingContent && (
             <div className="flex gap-4">
               <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center">
                 <svg className="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
-              <div className="bg-gray-800/50 rounded-2xl p-4">
-                <div className="flex gap-1">
-                  <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                  <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                  <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+              <div className="flex-1 max-w-2xl">
+                <div className="inline-block p-4 rounded-2xl bg-gray-800/50 text-gray-100 whitespace-pre-wrap">
+                  {streamingContent}
+                  <span className="inline-block w-2 h-4 bg-cyan-400 animate-pulse ml-1"></span>
                 </div>
               </div>
             </div>
