@@ -3,37 +3,37 @@ import Layout from '../layouts/Layout.astro';
 ---
 
 <Layout title="Profile | Platform Agent">
-  <div class="max-w-md mx-auto py-8">
+  <div class="max-w-lg mx-auto py-8">
     <h1 class="text-3xl font-bold mb-8">👤 Profile</h1>
     
     <!-- Avatar -->
-    <section class="card mb-6 text-center">
-      <div class="relative inline-block">
-        <div id="avatar" class="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-4xl text-white font-bold">
-          ?
-        </div>
-        <button id="changeAvatar" class="absolute bottom-0 right-0 p-2 bg-white rounded-full shadow-lg">
-          ✏️
-        </button>
-      </div>
-      <p class="text-sm text-gray-500 mt-2">Click to upload photo</p>
-    </section>
-    
-    <!-- Basic Info -->
     <section class="card mb-6">
-      <h2 class="text-lg font-semibold mb-4">📝 Basic Info</h2>
-      
-      <div class="space-y-4">
-        <div>
+      <div class="flex items-center gap-6">
+        <div class="relative">
+          <div id="avatar" class="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center text-5xl text-white font-bold shadow-lg">
+            ?
+          </div>
+          <label class="absolute bottom-0 right-0 w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center cursor-pointer hover:bg-gray-100 text-sm">
+            📷
+            <input type="file" id="avatarInput" accept="image/*" class="hidden" />
+          </label>
+        </div>
+        <div class="flex-1">
           <label class="block text-sm font-medium mb-1">Display Name</label>
           <input type="text" id="displayName" class="input" placeholder="Your name" />
         </div>
-        
+      </div>
+    </section>
+    
+    <!-- Account -->
+    <section class="card mb-6">
+      <h2 class="text-lg font-semibold mb-4">📧 Account</h2>
+      
+      <div class="space-y-4">
         <div>
           <label class="block text-sm font-medium mb-1">Username</label>
           <input type="text" id="username" class="input" placeholder="@username" />
         </div>
-        
         <div>
           <label class="block text-sm font-medium mb-1">Email</label>
           <input type="email" id="email" class="input" placeholder="you@example.com" />
@@ -43,19 +43,17 @@ import Layout from '../layouts/Layout.astro';
     
     <!-- Password -->
     <section class="card mb-6">
-      <h2 class="text-lg font-semibold mb-4">🔐 Change Password</h2>
+      <h2 class="text-lg font-semibold mb-4">🔐 Password</h2>
       
       <div class="space-y-4">
         <div>
           <label class="block text-sm font-medium mb-1">Current Password</label>
           <input type="password" id="currentPass" class="input" />
         </div>
-        
         <div>
           <label class="block text-sm font-medium mb-1">New Password</label>
           <input type="password" id="newPass" class="input" />
         </div>
-        
         <div>
           <label class="block text-sm font-medium mb-1">Confirm Password</label>
           <input type="password" id="confirmPass" class="input" />
@@ -68,115 +66,116 @@ import Layout from '../layouts/Layout.astro';
       <h2 class="text-lg font-semibold mb-4">⚙️ Preferences</h2>
       
       <div class="space-y-4">
-        <label class="flex items-center justify-between">
-          <span>Dark Mode</span>
+        <label class="flex items-center justify-between py-2">
+          <div>
+            <div class="font-medium">Dark Mode</div>
+            <p class="text-xs text-gray-500">Use dark theme</p>
+          </div>
           <input type="checkbox" id="darkMode" class="toggle" />
         </label>
-        
-        <label class="flex items-center justify-between">
-          <span>Email Notifications</span>
+        <label class="flex items-center justify-between py-2">
+          <div>
+            <div class="font-medium">Email Notifications</div>
+          </div>
           <input type="checkbox" id="emailNotif" class="toggle" checked />
-        </label>
-        
-        <label class="flex items-center justify-between">
-          <span>Share Usage Data</span>
-          <input type="checkbox" id="shareData" class="toggle" />
         </label>
       </div>
     </section>
     
-    <!-- Danger Zone -->
+    <!-- Delete -->
     <section class="card mb-6 border-red-200">
-      <h2 class="text-lg font-semibold mb-4 text-red-600">⚠️ Danger Zone</h2>
-      
-      <button id="deleteAccount" class="btn-danger">
-        🗑️ Delete Account
-      </button>
+      <h2 class="text-lg font-semibold text-red-600">⚠️ Danger Zone</h2>
+      <button id="deleteBtn" class="btn-danger mt-3">🗑️ Delete Account</button>
     </section>
     
     <!-- Save -->
-    <button id="saveBtn" class="btn-primary w-full">
-      💾 Save Profile
-    </button>
-    
-    <!-- Status -->
-    <div id="status" class="mt-4 p-3 rounded-lg hidden"></div>
+    <button id="saveBtn" class="btn-primary w-full">💾 Save</button>
+    <div id="status" class="mt-4 text-center hidden"></div>
   </div>
 </Layout>
 
 <script>
-  // Generate avatar from name
+  const avatar = document.getElementById('avatar');
+  const nameInput = document.getElementById('displayName');
+  
   function updateAvatar(name) {
-    const initial = name ? name.charAt(0).toUpperCase() : '?';
-    const avatar = document.getElementById('avatar');
-    if (avatar) avatar.textContent = initial;
+    if (avatar && name) {
+      const initial = name.charAt(0).toUpperCase();
+      avatar.textContent = initial;
+      const colors = ['from-blue-500', 'from-purple-500', 'from-pink-500', 'from-indigo-500'];
+      const hash = name.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+      avatar.className = `w-24 h-24 rounded-full bg-gradient-to-br ${colors[hash % colors.length]} to-pink-500 flex items-center justify-center text-5xl text-white font-bold shadow-lg`;
+    }
   }
   
-  // Display name change
-  document.getElementById('displayName')?.addEventListener('input', (e) => {
-    updateAvatar(e.target.value);
+  nameInput?.addEventListener('input', e => updateAvatar(e.target.value));
+  
+  document.getElementById('avatarInput')?.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (file && avatar) {
+      const reader = new FileReader();
+      reader.onload = ev => {
+        avatar.style.backgroundImage = `url(${ev.target.result})`;
+        avatar.style.backgroundSize = 'cover';
+        avatar.textContent = '';
+      };
+      reader.readAsDataURL(file);
+    }
   });
   
-  // Save profile
-  document.getElementById('saveBtn')?.addEventListener('click', async () => {
+  document.getElementById('saveBtn')?.addEventListener('click', () => {
+    const newPass = document.getElementById('newPass').value;
+    const confirm = document.getElementById('confirmPass').value;
+    if (newPass && newPass !== confirm) {
+      showStatus('Passwords do not match', 'error');
+      return;
+    }
     const profile = {
-      displayName: document.getElementById('displayName').value,
+      displayName: nameInput.value,
       username: document.getElementById('username').value,
       email: document.getElementById('email').value,
       darkMode: document.getElementById('darkMode').checked,
       emailNotif: document.getElementById('emailNotif').checked,
-      shareData: document.getElementById('shareData').checked,
     };
-    
-    localStorage.setItem('platform-agent-profile', JSON.stringify(profile));
-    
-    const status = document.getElementById('status');
-    status.textContent = '✅ Profile saved!';
-    status.classList.remove('hidden');
-    status.className = 'mt-4 p-3 rounded-lg bg-green-100 text-green-800';
+    localStorage.setItem('platform-profile', JSON.stringify(profile));
+    showStatus('✅ Saved!', 'success');
   });
   
-  // Delete account confirmation
-  document.getElementById('deleteAccount')?.addEventListener('click', () => {
-    if (confirm('Are you sure? This cannot be undone!')) {
-      alert('Account deleted. Redirecting...');
-      // Would call API here
+  document.getElementById('deleteBtn')?.addEventListener('click', () => {
+    if (confirm('Delete account? This cannot be undone.')) {
+      localStorage.removeItem('platform-profile');
+      window.location.href = '/';
     }
   });
   
-  // Load profile on page load
-  const saved = localStorage.getItem('platform-agent-profile');
+  function showStatus(msg, type) {
+    const el = document.getElementById('status');
+    if (el) {
+      el.textContent = msg;
+      el.className = `mt-4 p-3 rounded-lg text-center ${type === 'error' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`;
+    }
+  }
+  
+  // Load saved
+  const saved = localStorage.getItem('platform-profile');
   if (saved) {
     const p = JSON.parse(saved);
-    if (p.displayName) document.getElementById('displayName').value = p.displayName;
-    if (p.username) document.getElementById('username').value = p.username;
-    if (p.email) document.getElementById('email').value = p.email;
-    if (p.darkMode !== undefined) document.getElementById('darkMode').checked = p.darkMode;
-    if (p.emailNotif !== undefined) document.getElementById('emailNotif').checked = p.emailNotif;
-    if (p.shareData !== undefined) document.getElementById('shareData').checked = p.shareData;
+    nameInput.value = p.displayName || '';
+    document.getElementById('username').value = p.username || '';
+    document.getElementById('email').value = p.email || '';
+    document.getElementById('darkMode').checked = p.darkMode || false;
+    document.getElementById('emailNotif').checked = p.emailNotif !== false;
     updateAvatar(p.displayName);
   }
 </script>
 
 <style>
-  .card {
-    @apply bg-white rounded-xl p-6 shadow-sm border border-gray-200;
-  }
-  .input {
-    @apply w-full px-4 py-2 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition;
-  }
-  .toggle {
-    @apply w-10 h-6 rounded-full appearance-none bg-gray-300 checked:bg-blue-500 transition cursor-pointer;
-  }
-  .toggle:checked::after {
-    content: '';
-    @apply block w-4 h-4 bg-white rounded-full m-1 transition;
-  }
-  .btn-primary {
-    @apply px-6 py-3 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition;
-  }
-  .btn-danger {
-    @apply px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition;
-  }
+  .card { @apply bg-white rounded-xl p-6 shadow-sm border border-gray-200; }
+  .input { @apply w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-blue-500 outline-none transition; }
+  .toggle { @apply w-12 h-6 rounded-full appearance-none bg-gray-300 checked:bg-blue-500 cursor-pointer relative; }
+  .toggle::after { content: ''; @apply absolute w-5 h-5 bg-white rounded-full top-0.5 left-0.5 transition; }
+  .toggle:checked::after { @apply left-6; }
+  .btn-primary { @apply w-full py-3 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition; }
+  .btn-danger { @apply px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition; }
 </style>
 </Layout>

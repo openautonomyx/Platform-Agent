@@ -1,0 +1,122 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Organization | Platform Agent">
+  <div class="max-w-lg mx-auto py-8">
+    <h1 class="text-3xl font-bold mb-8">🏢 Organization</h1>
+    
+    <!-- Org Profile -->
+    <section class="card mb-6">
+      <div class="flex items-center gap-6">
+        <div class="w-24 h-24 rounded-xl bg-gradient-to-br from-indigo-500 via-blue-500 to-cyan-500 flex items-center justify-center text-4xl text-white font-bold">
+          ?
+        </div>
+        <div class="flex-1">
+          <label class="block text-sm font-medium mb-1">Organization Name</label>
+          <input type="text" id="orgName" class="input" placeholder="Acme Inc" />
+        </div>
+      </div>
+    </section>
+    
+    <!-- Details -->
+    <section class="card mb-6">
+      <h2 class="text-lg font-semibold mb-4">📋 Details</h2>
+      
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium mb-1">Website</label>
+          <input type="url" id="website" class="input" placeholder="https://example.com" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Description</label>
+          <textarea id="description" class="input" rows="3" placeholder="What does your org do?"></textarea>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Members -->
+    <section class="card mb-6">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold">👥 Members</h2>
+        <button id="inviteBtn" class="btn-secondary text-sm">➕ Invite</button>
+      </div>
+      
+      <div id="membersList" class="space-y-3">
+        <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+          <div class="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center font-semibold">Y</div>
+          <div class="flex-1">
+            <div class="font-medium">You</div>
+            <div class="text-sm text-gray-500">Owner</div>
+          </div>
+          <span class="text-green-600 text-sm">Active</span>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Danger Zone -->
+    <section class="card mb-6 border-red-200">
+      <h2 class="text-lg font-semibold text-red-600">⚠️ Danger Zone</h2>
+      <button class="btn-danger mt-3">🗑️ Delete Organization</button>
+    </section>
+    
+    <button id="saveBtn" class="btn-primary w-full">💾 Save</button>
+    <div id="status" class="mt-4 text-center hidden"></div>
+  </div>
+</Layout>
+
+<script>
+  document.getElementById('saveBtn')?.addEventListener('click', () => {
+    const org = {
+      name: document.getElementById('orgName').value,
+      website: document.getElementById('website').value,
+      description: document.getElementById('description').value,
+    };
+    localStorage.setItem('platform-org', JSON.stringify(org));
+    showStatus('✅ Saved!', 'success');
+  });
+  
+  document.getElementById('inviteBtn')?.addEventListener('click', () => {
+    const email = prompt('Email to invite:');
+    if (email) {
+      const list = document.getElementById('membersList');
+      const div = document.createElement('div');
+      div.className = 'flex items-center gap-3 p-3 bg-gray-50 rounded-lg';
+      div.innerHTML = `
+        <div class="w-10 h-10 rounded-full bg-gray-400 text-white flex items-center justify-center font-semibold">?</div>
+        <div class="flex-1">
+          <div class="font-medium">${email}</div>
+          <div class="text-sm text-gray-500">Pending</div>
+        </div>
+        <span class="text-yellow-600 text-sm">Pending</span>
+      `;
+      list.appendChild(div);
+    }
+  });
+  
+  function showStatus(msg, type) {
+    const el = document.getElementById('status');
+    if (el) {
+      el.textContent = msg;
+      el.className = `mt-4 p-3 rounded-lg text-center ${type === 'error' ? 'bg-red-100' : 'bg-green-100'}`;
+    }
+  }
+  
+  // Load
+  const saved = localStorage.getItem('platform-org');
+  if (saved) {
+    const o = JSON.parse(saved);
+    document.getElementById('orgName').value = o.name || '';
+    document.getElementById('website').value = o.website || '';
+    document.getElementById('description').value = o.description || '';
+  }
+</script>
+
+<style>
+  .card { @apply bg-white rounded-xl p-6 shadow-sm border border-gray-200; }
+  .input { @apply w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-blue-500 outline-none transition; }
+  .btn-primary { @apply w-full py-3 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition; }
+  .btn-secondary { @apply px-3 py-1.5 bg-gray-100 rounded-lg hover:bg-gray-200 transition; }
+  .btn-danger { @apply px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition; }
+</style>
+</Layout>
