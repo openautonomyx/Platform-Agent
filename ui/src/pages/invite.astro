@@ -1,0 +1,107 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Join Organization | Platform Agent">
+  <div class="max-w-md mx-auto py-8">
+    <h1 class="text-3xl font-bold mb-2">🎉 Join Organization</h1>
+    <p class="text-gray-600 mb-8">You've been invited!</p>
+    
+    <!-- Invite Info -->
+    <section class="card mb-6">
+      <div class="flex items-center gap-4 mb-4">
+        <div class="w-16 h-16 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-2xl text-white">
+          ?
+        </div>
+        <div>
+          <div id="orgName" class="text-xl font-bold">Loading...</div>
+          <div class="text-sm text-gray-500">invited you</div>
+        </div>
+      </div>
+      
+      <div class="p-3 bg-gray-50 rounded-lg">
+        <div class="text-sm text-gray-500">Invited by</div>
+        <div id="invitedBy" class="font-medium">-</div>
+      </div>
+    </section>
+    
+    <!-- Accept -->
+    <section class="card mb-6">
+      <h2 class="text-lg font-semibold mb-4">👤 Your Account</h2>
+      
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium mb-1">Name</label>
+          <input type="text" id="name" class="input" placeholder="Your name" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Email</label>
+          <input type="email" id="email" class="input" placeholder="you@example.com" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Password</label>
+          <input type="password" id="password" class="input" placeholder="••••••••" />
+        </div>
+      </div>
+    </section>
+    
+    <!-- Actions -->
+    <div class="flex gap-3">
+      <button id="declineBtn" class="btn-secondary flex-1">Decline</button>
+      <button id="acceptBtn" class="btn-primary flex-1">Accept Invite</button>
+    </div>
+    
+    <div id="status" class="mt-4 text-center hidden"></div>
+  </div>
+</Layout>
+
+<script>
+  // Parse invite from URL
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('token') || 'demo-token';
+  
+  // Load invite (in real app, this calls API)
+  // For demo, show mock data
+  document.getElementById('orgName').textContent = 'Acme Corp';
+  document.getElementById('invitedBy').textContent = 'john@acme.com';
+  
+  document.getElementById('acceptBtn')?.addEventListener('click', () => {
+    const name = document.getElementById('name').value;
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    
+    if (!name || !email || !password) {
+      showStatus('Please fill all fields', 'error');
+      return;
+    }
+    
+    // In real app: POST /api/invites/accept
+    const user = { name, email, token };
+    localStorage.setItem('platform-user', JSON.stringify(user));
+    showStatus('✅ Welcome! Redirecting...', 'success');
+    
+    setTimeout(() => {
+      window.location.href = '/chat';
+    }, 1000);
+  });
+  
+  document.getElementById('declineBtn')?.addEventListener('click', () => {
+    window.location.href = '/';
+  });
+  
+  function showStatus(msg, type) {
+    const el = document.getElementById('status');
+    if (el) {
+      el.textContent = msg;
+      el.className = `mt-4 p-3 rounded-lg text-center ${type === 'error' ? 'bg-red-100' : 'bg-green-100'}`;
+    }
+  }
+</script>
+
+<style>
+  .card { @apply bg-white rounded-xl p-6 shadow-sm border border-gray-200; }
+  .input { @apply w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-blue-500 outline-none transition; }
+  .btn-primary { @apply py-3 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition; }
+  .btn-secondary { @apply py-3 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition; }
+</style>
+</Layout>
